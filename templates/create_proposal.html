@@ -1,16 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{% load crispy_forms_tags %}
-<h2>CREATE PROPOSAL </h2>
-<div class="text-dark">
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <table border='1'>
-      {% crispy form %}<br>
-    </table>
-    <div class="col-sm-offset-1 col-sm-4">
-        <button type="submit" class="btn btn-success">Submit</button>
-        <button type="Cancel" class="btn btn-warm"><a href="{% url "tracker:home" %}"> Cancel </a></button>
+<div class="alert alert-danger" role="alert" align=center>
+  <h3>No Proposal Added Yet</h3>
+</div>
 
 {% endblock %}

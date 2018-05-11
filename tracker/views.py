@@ -76,10 +76,9 @@ def edit_engagement(request, client_id, engagement_id):
         form = EngagementForm(request.POST,instance=eng)
         if form.is_valid():
             engagement = form.save()
-            return HttpResponseRedirect("/")
-
+            return redirect("tracker:detail", pk=engagement_id)
     form = EngagementForm(instance=eng)
-    return render(request, 'edit_engagement.html', {'form':form})
+    return render(request, 'edit_engagement.html', {'form':form, 'eng':eng})
 
 @login_required
 def index(request):
@@ -126,7 +125,7 @@ def delete_engagement(request, client_id, engagement_id):
     engagement.delete()
     return render(request, 'detail.html', {'client': client})
 
-def create_proposal(request):
+def new_proposal(request):
     form            = ProposalForm
     template_name   = 'create_proposal.html'
     return render(request, template_name, {'form':form})
@@ -150,24 +149,22 @@ def create_invoice(request, pk, engagement_pk):
         form = InvoiceForm()
     return render(request, 'invoice_create.html',{'form':form,'engagement':engagement})
 
-def pay_invoice(request, pk, engagement_pk, invoice_pk):
-    invoice = get_object_or_404(Invoice, engagement__pk=engagement_pk, pk=invoice_pk)
-    if request.method=='POST':
-        form = PaymentForm(request.POST)
-        if form.is_valid():
-            payment = form.save(commit=False)
-            payment.invoice = invoice
-            payment.save()
+class PayInvoice(CreateView):
+    model = Payment
+    fields = ('__all__')
+    template_name = 'payment.html'
+    pk_url_kwarg = 'pay_pk'
+    context_object_name = "post"
 
-            invoice_url = reverse('tracker:engagement_invoices', kwargs={'pk':pk,'engagement_pk':engagement_pk,'invoice_pk':invoice_pk})
-            invoice_payment_url = '{url}/{id}'.format(
-                            url = invoice_url,
-                            id=invoice.pk,
-                                )
-            return redirect(invoice_url)
-    else:
-        form = PaymentForm()
-    return render(request, 'payment.html',{'form':form,'invoice':invoice})
+    def get_queryset(self):
+        self.invoice = get_object_or_404(Invoice, engagement__pk=self.kwargs.get('pk'), pk=self.kwargs.get(invoice_pk))
+        queryset = self.invoice.payment.order_by('-date')
+        return queryset
+
+    def form_valid(self, form):
+        pay = form.save(commit=False)
+        pay.invoice = self.invoice
+        return redirect('tracker:engagement_invoices', kwargs={'pk':pk, 'engagement_pk':engagement_pk})
 
 class EngagementDetails(DetailView):
     template_name = 'engagement_details.html'
@@ -310,7 +307,6 @@ def engagement_invoices(request, pk, engagement_pk):
     engagement =get_object_or_404(Engagement, pk=pk, engagement__pk=engagement_pk)
     invoice = invoice.engagement.all()
     return render(request, 'detail.html', {'client':client, 'invoice':invoice})
-
 
 class EngagementInvoice(ListView):
     model = Invoice
