@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% load humanize %}
+
+{% block content %}
+
+{% if targets %}
+{% for target in targets %}
+<div class="mb-4">
+<a href="{% url 'tracker:add_target' %}" class="btn btn-primary">Add Target</a>
+</div>
+
+<hr size="30">
+
+<h3 align= 'middle'>{{target.year}}</h3>
+
+<div class="container-fluid">
+
+<div class="col-xs-6">
+<table class="table table-sm">
+<u><h4 align= 'middle'>EXISTING BUSINESS</h4></u>
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">Services</th>
+      <th scope="col">Target</th>
+      <th scope="col">Current</th>
+      <th scope="col">Variance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">Audit</th>
+      <td>{{ target.audit|intcomma }}</td>
+      <td>{{sum_audit|intcomma}}</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th scope="row">AoS</th>
+      <td>{{ target.aos|intcomma }}</td>
+      <td>{{sum_aos|intcomma}}</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th scope="row">TaxCom</th>
+      <td>{{ target.taxcom|intcomma }}</td>
+      <td>{{sum_tax|intcomma}}</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th scope="row">TaxAdv</th>
+      <td>{{ target.taxadv|intcomma }}</td>
+      <td>{{sum_taxadv|intcomma}}</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th scope="row">ComSec</th>
+      <td>{{ target.comsec|intcomma }}</td>
+      <td>{{sum_comsec|intcomma}}</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th scope="row">Consul</th>
+      <td>{{ target.consul|intcomma }}</td>
+      <td>{{sum_cons|intcomma}}</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th scope="row">TOTAL</th>
+      <td>{{exiting|intcomma}}</td>
+      <td>{{summation_all_assign|intcomma}}</td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="col-xs-6">
+  <table class="table table-sm">
+    <u><h4 align= 'middle'>NEW BUSINESS </h4></u>
+    <thead class="thead-dark">
+      <tr>
+        <th scope="col">Services</th>
+        <th scope="col">Target</th>
+        <th scope="col">Current</th>
+        <th scope="col">Variance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">Audit</th>
+        <td>{{target.audit_new|intcomma}}</td>
+        <td>{{sum_audit_new|intcomma}}</td>
+        <td>{{var_audit}}</td>
+      </tr>
+      <tr>
+        <th scope="row">AoS</th>
+        <td>{{target.aos_new|intcomma}}</td>
+        <td>{{sum_aos_new|intcomma}}</td>
+        <td>{{var_aos}}</td>
+        <td></td>
+      </tr>
+      <tr>
+        <th scope="row">TaxCom</th>
+        <td>{{target.taxcom_new|intcomma}}</td>
+        <td>{{sum_tax_new|intcomma}}</td>
+        <td>{{var_tax}}</td>
+        <td></td>
+      </tr>
+      <tr>
+        <th scope="row">TaxAdv</th>
+        <td>{{target.taxadv_new|intcomma}}</td>
+        <td>{{sum_taxadv_new|intcomma}}</td>
+        <td>{{var_taxadv}}</td>
+        <td></td>
+      </tr>
+      <tr>
+        <th scope="row">ComSec</th>
+        <td>{{target.comsec_new|intcomma}}</td>
+        <td>{{sum_comsec_new|intcomma}}</td>
+        <td>{{var_comsec}}</td>
+        <td></td>
+      </tr>
+      <tr>
+        <th scope="row">Consul</th>
+        <td>{{target.consul_new|intcomma}}</td>
+        <td>{{sum_cons_new|intcomma}}</td>
+        <td>{{var_cons}}</td>
+        <td></td>
+      </tr>
+      <tr>
+        <th scope="row">TOTAL</th>
+        <td>{{new|intcomma}}</td>
+        <td>{{summation_all_assign_new|intcomma}}</td>
+        <td></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<!-- <div class="col-xs-4">
+  <h4 align= 'middle'>GRAPH</h4>
+</div> -->
+</div>
+{% endfor %}
+{% else %}
+
+<div class="alert alert-danger" role="alert" align=center>
+  <h3>No Targets Set Yet</h3>
+</div>
+
+{% endif %}
+
+<!-- {% for src in engagement %}
+ one: {{src.assignment}}
+ two: {{src.active__sum}}
+{% endfor %} -->
+
+{% endblock %}

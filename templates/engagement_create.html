@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<h1>Add Engagement</h1>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {% crispy form %}
+</form>
+
+{% endblock %}

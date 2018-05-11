@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load humanize %}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item active" aria-current="page"><a href="#">Invoices</a></li>
+  </ol>
+</nav>
+
+{% if invoices %}
+
+{% for invoice in invoices %}
+
+<div class="container">
+<div class="card">
+  <table class="table table-hover table-sm">
+    <thead>
+      <tr>
+        <th> {{invoice.reference}}<small class="text-success">(${{invoice.amount|intcomma}})</small></th>
+        <th> <a href="{% url 'tracker:pay_invoice' invoice.engagement.client.pk invoice.engagement.pk invoice.pk %}">
+          <button type="button" class="btn btn-primary">PAY INVOICE</button></a></th>
+        <th>Payment</th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td></td>
+          <!-- for pay in -->
+          <td></td>
+          <td>50%</td>
+          <td><text class="text-danger">1,000 </text>(Paid {{invoice.date|naturaltime}})</td>
+        </tr>
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+
+{% else %}
+<div class="alert alert-danger" role="alert" align=center>
+  <h3>Not Invoiced Yet, <a href="{% url 'tracker:create_invoice' engagement.client.pk engagement.pk %}">Add Invoice</a></h3>
+</div>
+{% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% load staticfiles %}
+
+{% block content %}
+<div class="container">
+
+<ul>
+<button type="button" class="btn btn-secondary">
+  CLIENTS <span class="badge badge-light">{{count}}</span>
+</button>
+<a href="{% url 'tracker:new_client' %}" class="btn btn-primary">Add Client</a>
+</ul>
+
+<hr size="30">
+{% if clients %}
+
+<div class="container">
+  <div class="row">
+    {% for client in clients %}
+     <div class="col-sm-3 ">
+           <a href="{% url 'tracker:detail' client.pk %}">
+           {% if client.company_logo %}
+           <img src="{{ client.logo.url }}">
+           {% else %}
+           <img src="{% static 'image/mazarslogo.jpg' %}" alt="">
+           {% endif %}
+           <center><h5 class="card-title" style ="padding-bottom: 25px;" >{{ client.name|truncatechars:30|upper }}</h5></center>
+           </a>
+     </div>
+     {% endfor %}
+  </div>
+</div>
+
+{% else %}
+<div class="alert alert-danger" role="alert" align=center>
+  <h3>No Client Added Yet</h3>
+</div>
+{% endif %}
+
+{% endblock %}

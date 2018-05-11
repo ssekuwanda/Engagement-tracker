@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+  <div class="row">
+    <div class="col-sm-3">
+      <div class="panel panel-default">
+        <div class="container">
+        </div>
+        <a href="{% url 'tracker:client_edit' client.pk %}">
+        <h2 align=center>{{ client.name|capfirst }}</h2>
+          {% if client.company_logo %}
+              <img src="{{ client.logo.url }}" style ="padding-bottom: 25px;">
+          {%  else %}
+            <p>NO LOGO</p>
+          {% endif %}
+          </a>
+
+      <ul>
+        <table>
+          <tr>
+              <td width="100"><h5><b>TIN:</b>   {{ client.tin }}</h6></td>
+              <td><h5><b>Email:</b> {{ client.Email_address }} </h5></td>
+          </tr>
+          <tr>
+              <td><h6><b>Services:</b> {{ client.services }}</h6></td>
+              <td><h6><b>Year End:</b> {{ client.year_end }}</h6></td>
+          </tr>
+      </table>
+
+      </ul>
+    </div>
+  </div>
+    <div class="col-sm-9">
+      <ul class="nav nav-pills" style="margin-bottom: 5px;">
+          <li role="presentation" class="active"><a href= "{% url "tracker:create_engagement" client.pk %}">Add Engagement</a></li>
+      </ul>
+      <h3>Engagements of {{ client.name }}</h3>
+
+      {% if error_message %}
+          <p><strong>{{ error_message }}</strong></p>
+      {% endif %}
+<div class="panel panel-default">
+    <div class="panel-body">
+      <table class="table">
+          <thead>
+          <tr>
+              <th>Assignment</th>
+              <th>Reference</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Balance</th>
+              <th>Letter</th>
+              <th></th>
+
+          </tr>
+          </thead>
+          <tbody>
+          {% for engagement in engagements %}
+              <tr>
+                  <td>  <a href="{% url "tracker:edit_engagement" engagement.client.id client.id  %}">{{ engagement.assignment }}</a></td>
+                  <td>{{ engagement.reference }}</td>
+                  <td>{{ engagement.date }}</td>
+                  <td>{{ engagement.active }}</td>
+                  <td>{{ engagement.balance }}</td>
+                  <td>
+                    {% if engagement.letter %}
+                      <a target="_blank" href="{{ engagement.letter.url }}">
+                          <button type="button" class="btn btn-danger btn-xs">
+                              <span class="glyphicon glyphicon-floppy-disk"></span>&nbsp; View
+                          </button>
+                      </a>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'tracker:engagement_invoices' client.pk engagement.pk %}">
+                        <button type="submit" class="btn btn-success btn-xs">
+                            <span class="glyphicon glyphicon-pen"></span>&nbsp; Invoice $ Bill
+                        </button>
+                    </a>
+                  </td>
+              </tr>
+          {% endfor %}
+          </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

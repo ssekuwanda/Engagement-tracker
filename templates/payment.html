@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1 class= 'align-middle'>Billings</h1>
+<button type="button" name="button" class = 'btn btn-success'>
+   <a href="{% url 'tracker:engagement_invoices' invoice.engagement.pk %}">ADD INVOICE</a>
+</button>
+<hr>
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th scope="col">Invoice Ref</th>
+      <th scope="col">Amount</th>
+      <th scope="col">Payment 50%</th>
+      <th scope="col">Payment 40%</th>
+      <th scope="col">Payment 10%</th>
+      <th scope="col">Balance</th>
+      <th scope="col">Payment</th>
+      <th scope="col">Request Pay</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+{% endblock %}

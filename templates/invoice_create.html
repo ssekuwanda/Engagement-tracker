@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<center>  <h3>ADD INVOICE</h3> </center>
+<form method="post" id='invoice-create-form' enctype="multipart/form-data">
+  {% csrf_token %}
+  {% crispy form %}
+</form>
+
+{% endblock %}
