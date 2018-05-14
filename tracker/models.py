@@ -7,6 +7,7 @@ import datetime
 from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToFill
 from django.db.models.signals import pre_save, post_save
+from datetime import date
 
 
 ass = (
@@ -114,7 +115,7 @@ class ContactPerson(models.Model):
 
 class Engagement(models.Model):
     client              = models.ForeignKey(Client, on_delete=models.CASCADE,blank=True, null=True, related_name='engagements')
-    year                = models.IntegerField('year', choices=YEAR_CHOICES, default=datetime.datetime.now().year)
+    year                = models.IntegerField('Year', choices=YEAR_CHOICES, default=datetime.datetime.now().year)
     reference           = models.CharField(max_length =122,blank=True, null=True)
     date                = models.DateTimeField(auto_now_add=True,blank=True, null=True)
     assignment          = models.CharField('Service', max_length = 19, choices = ass,blank=True, null=True)
@@ -131,9 +132,6 @@ class Engagement(models.Model):
     remarks             = models.CharField(max_length=1000, blank=True, null=True)
     type                = models.CharField(choices=type, max_length=12, blank=True, null=True)
 
-    # def __str__(self):
-    #     return self.assignment
-
     class Meta:
         ordering = ('-date',)
 
@@ -143,9 +141,16 @@ class Engagement(models.Model):
 
 def rl_pre_save_receiver(sender, instance, *args, **kwargs):
     instance.active = instance.rate*instance.factor
-
 pre_save.connect(rl_pre_save_receiver, sender=Engagement)
 
+def rl_pre_save_receiver(sender, instance, *args, **kwargs):
+    today = datetime.date.today()
+    later = instance.date
+    timed = later- today
+    timer = timed.days
+    if timer >= 250:
+        instance.type = "Existing"
+pre_save.connect(rl_pre_save_receiver, sender=Engagement)
 
 class StuffOnJob(models.Model):
     engagement = models.ForeignKey(Engagement, on_delete=models.CASCADE, blank=True, null= True)
@@ -156,12 +161,6 @@ class StuffOnJob(models.Model):
 
     def __str__(self):
         return self.title+' - '+self.first_name+' '+self.last_name
-
-# def rl_pre_save_receiver(sender, instance, *args, **kwargs):
-#     if isinstance(instance.reference)==True:
-#         instance.engagement_status = instance.engagement_status=True
-
-# pre_save.connect(rl_pre_save_receiver, sender=Engagement)
 
 class Notes(models.Model):
     engagement = models.ForeignKey(Engagement, on_delete=models.CASCADE)
@@ -185,7 +184,7 @@ class Invoice(models.Model):
         return self.reference
 
 class Payment(models.Model):
-    invoice  = models.ForeignKey(Invoice,on_delete=models.CASCADE, related_name='invoice',blank=True, null=True)
+    invoice  = models.ForeignKey(Invoice,on_delete=models.CASCADE, related_name='payments',blank=True, null=True)
     amount      = models.IntegerField(blank=True, null=True)
     doc         = models.FileField('Scanned Receipt')
     date        = models.DateField(blank=True, null= True)
@@ -205,19 +204,19 @@ class Disengagement(models.Model):
         return self.date
 
 class Target(models.Model):
-    year        = models.IntegerField(choices=YEAR_CHOICES, unique=True, blank=True, null=True)
-    audit       = models.PositiveIntegerField(blank=True, null=True)
-    aos         = models.PositiveIntegerField('AoS',blank=True, null=True)
-    taxcom      = models.PositiveIntegerField('TaxCom',blank=True, null=True)
-    taxadv      = models.PositiveIntegerField('TaxAdv',blank=True, null=True)
-    comsec      = models.PositiveIntegerField('ComSec',blank=True, null=True)
-    consul      = models.PositiveIntegerField('Consul',blank=True, null=True)
-    audit_new   = models.PositiveIntegerField('audit', blank=True, null=True)
-    aos_new     = models.PositiveIntegerField('AoS',blank=True, null=True)
-    taxcom_new  = models.PositiveIntegerField('TaxCom',blank=True, null=True)
-    taxadv_new  = models.PositiveIntegerField('TaxAdv',blank=True, null=True)
-    comsec_new  = models.PositiveIntegerField('ComSec',blank=True, null=True)
-    consul_new  = models.PositiveIntegerField('Consul',blank=True, null=True)
+    year        = models.IntegerField(choices=YEAR_CHOICES, unique=True)
+    audit       = models.PositiveIntegerField()
+    aos         = models.PositiveIntegerField('AoS')
+    taxcom      = models.PositiveIntegerField('TaxCom')
+    taxadv      = models.PositiveIntegerField('TaxAdv')
+    comsec      = models.PositiveIntegerField('ComSec')
+    consul      = models.PositiveIntegerField('Consul')
+    audit_new   = models.PositiveIntegerField('audit')
+    aos_new     = models.PositiveIntegerField('AoS')
+    taxcom_new  = models.PositiveIntegerField('TaxCom')
+    taxadv_new  = models.PositiveIntegerField('TaxAdv')
+    comsec_new  = models.PositiveIntegerField('ComSec')
+    consul_new  = models.PositiveIntegerField('Consul')
 
     class Meta:
         ordering = ('-year',)

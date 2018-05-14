@@ -19,7 +19,7 @@
     <thead>
       <tr>
         <th> {{invoice.reference}}<small class="text-success">(${{invoice.amount|intcomma}})</small></th>
-        <th> <a href="{% url 'tracker:pay_invoice' invoice.engagement.client.pk invoice.engagement.pk invoice.pk %}">
+        <th> <a href="{% url 'tracker:create_payment' invoice.engagement.client.pk invoice.engagement.pk invoice.pk %}">
           <button type="button" class="btn btn-primary">PAY INVOICE</button></a></th>
         <th>Payment</th>
         <th>Amount</th>

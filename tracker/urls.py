@@ -19,6 +19,6 @@ urlpatterns = [
         path('<int:client_id>/detail/<int:engagement_id>/', views.edit_engagement, name='edit_engagement'),
         path('<int:pk>/detail/<int:engagement_pk>/invoices/', views.EngagementInvoice.as_view(), name='engagement_invoices'),
         path('<int:pk>/detail/<int:engagement_pk>/create-invoice/', views.create_invoice, name='create_invoice'),
-        path('<int:pk>/detail/<int:engagement_pk>/invoices/<int:pay_pk>/pay/', views.PayInvoice.as_view(), name='pay_invoice'),
+        path('<int:pk>/detail/<int:engagement_pk>/invoices/<int:pay_pk>/pay/', views.create_payment, name='create_payment'),
         re_path(r'^(?P<client_id>[0-9]+)/delete-engagement/^(?P<engagement_id>[0-9]+)/$', views.delete_engagement, name='delete_engagement'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

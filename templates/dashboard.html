@@ -4,15 +4,17 @@
 
 {% block content %}
 
-{% if targets %}
-{% for target in targets %}
 <div class="mb-4">
 <a href="{% url 'tracker:add_target' %}" class="btn btn-primary">Add Target</a>
 </div>
 
+{% if targets %}
+{% for target in targets %}
+
+
 <hr size="30">
 
-<h3 align= 'middle'>{{target.year}}</h3>
+<h3 align= 'middle'><b>{{target.year}}</b></h3>
 
 <div class="container-fluid">
 

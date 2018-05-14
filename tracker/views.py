@@ -7,7 +7,7 @@ from .forms import NewClientForm, UserForm, EngagementForm, ProposalForm, Paymen
 from .models import Client, ContactPerson, Engagement, Invoice, Payment, Target
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView,  CreateView, UpdateView, DetailView, ListView
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -149,22 +149,24 @@ def create_invoice(request, pk, engagement_pk):
         form = InvoiceForm()
     return render(request, 'invoice_create.html',{'form':form,'engagement':engagement})
 
-class PayInvoice(CreateView):
-    model = Payment
-    fields = ('__all__')
-    template_name = 'payment.html'
-    pk_url_kwarg = 'pay_pk'
-    context_object_name = "post"
+def create_payment(request, pk, invoice_pk):
+    invoice = get_object_or_404(Invoice, engagement__pk=pk, pk=invoice_pk)
+    if request.method =='POST':
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.invoice = invoice
+            payment.save()
 
-    def get_queryset(self):
-        self.invoice = get_object_or_404(Invoice, engagement__pk=self.kwargs.get('pk'), pk=self.kwargs.get(invoice_pk))
-        queryset = self.invoice.payment.order_by('-date')
-        return queryset
-
-    def form_valid(self, form):
-        pay = form.save(commit=False)
-        pay.invoice = self.invoice
-        return redirect('tracker:engagement_invoices', kwargs={'pk':pk, 'engagement_pk':engagement_pk})
+            invoice_url = reverse('tracker:engagement_invoices', kwargs={'pk':pk, 'invoice_pk':invoice_pk})
+            invoice_payment_url = '{url}/{id}'.format(
+                url=invoice_url,
+                id=payment.pk,
+                )
+            return redirect(invoice_url)
+        else:
+            form = PaymentForm()
+        return render(request, 'payment.html', {'form':form, 'invoice':invoice})
 
 class EngagementDetails(DetailView):
     template_name = 'engagement_details.html'
@@ -207,7 +209,7 @@ def DisengagementForm(request):
             return redirect('detail')
     else:
         form = DisengagementForm()
-    return render(request,  'disengagementform.html', {'form':form })
+    return render(request,  'disengagementform.html', {'form':form, 'client':client})
 
 def dashboard(request):
     targets = Target.objects.all()

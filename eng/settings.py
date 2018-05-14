@@ -18,7 +18,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '%uc^85l0sia(k=xoah59#%--09$ytxx#01k)$&2-e8dt9f#kld'
 
@@ -70,7 +69,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.media'
+                'django.template.context_processors.media',
             ],
         },
     },
@@ -114,7 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Kampala'
 
 USE_I18N = True
 
@@ -147,18 +146,9 @@ MESSAGE_TAGS = {
     messages.ERROR: 'alert-danger',
 }
 
-# Sending mail
-# EMAIL_HOST = 'mail.brj.co.ug'
-# EMAIL_HOST_USER = 'notifications@brj.co.ug'
-# EMAIL_HOST_PASSWORD = 'Sseku@BRJ2019'
-# EMAIL_PORT = 465
-# EMAIL_USE_TLS = True
-# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
-
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_PASSWORD = 'Sseku2021'
-EMAIL_HOST_USER = 'cytixdoug@gmail.com'
-EMAIL_PORT = 587
+EMAIL_HOST = 'mail.brj.co.ug'
+EMAIL_HOST_USER = 'notifications@brj.co.ug'
+EMAIL_HOST_PASSWORD = 'Sseku@BRJ2019'
+EMAIL_PORT = 465
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

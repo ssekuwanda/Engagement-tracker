@@ -133,6 +133,7 @@ class TargetForm(ModelForm):
         self.helper.add_input(Submit('submit', 'Submit',css_class='btn-success'))
         self.helper.form_class = 'form-horizontal'
         self.helper.layout = Layout(
+                                Fieldset('YEAR','year'),
                                 Fieldset('EXISTING ENGAGEMENTS','audit','aos','taxcom','taxadv','comsec','consul'),
                                 Fieldset('NEW ENGAGEMENTS','audit_new','aos_new','taxcom_new','taxadv_new','comsec_new','consul_new'),)
 
