@@ -4,18 +4,22 @@
 
 {% block content %}
 
-<h1>Add Client</h1>
-{% if messages %}
+<div class="container">
+
+  <h1>Add Client</h1>
+  {% if messages %}
   <ul class="messages">
     {% for message in messages %}
       <li class="{{ message.tags }}">{{ message }}</li>
     {% endfor %}
   </ul>
-{% endif %}
+  {% endif %}
 
-<form method="post" id="id-client-form" enctype="multipart/form-data">
+  <form method="post" id="id-client-form" enctype="multipart/form-data">
   {% csrf_token %}
   {% crispy form %}
-</form>
+  </form>
+  
+</div>
 
 {% endblock %}

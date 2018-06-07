@@ -1,0 +1,13 @@
+date = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
+
+
+time in settings--> Africa/Kampala
+
+----static files----
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    # ... the rest of your URLconf goes here ...
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+https://docs.djangoproject.com/en/2.0/howto/static-files/

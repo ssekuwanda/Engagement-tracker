@@ -1,48 +1,59 @@
 {% extends 'base.html' %}
+{% load mathfilters %}
 
 {% block content %}
 {% load humanize %}
 
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item active" aria-current="page"><a href="#">Invoices</a></li>
-  </ol>
-</nav>
-
 {% if invoices %}
-
 {% for invoice in invoices %}
 
 <div class="container">
-<div class="card">
-  <table class="table table-hover table-sm">
+  <table class="table table-hover">
     <thead>
       <tr>
-        <th> {{invoice.reference}}<small class="text-success">(${{invoice.amount|intcomma}})</small></th>
-        <th> <a href="{% url 'tracker:create_payment' invoice.engagement.client.pk invoice.engagement.pk invoice.pk %}">
-          <button type="button" class="btn btn-primary">PAY INVOICE</button></a></th>
-        <th>Payment</th>
-        <th>Amount</th>
+        <th scope="col">Assignment</th>
+        <th scope="col">Reference</th>
+        <th scope="col"> Bill</th>
+        <th scope="col">Percent</th>
+        <th scope="col">Amount</th>
+        <th scope="col">Balance</th>
       </tr>
     </thead>
     <tbody>
-        <tr>
-          <td></td>
-          <!-- for pay in -->
-          <td></td>
-          <td>50%</td>
-          <td><text class="text-danger">1,000 </text>(Paid {{invoice.date|naturaltime}})</td>
-        </tr>
+      <tr>
+        <td></td>
+        <td>{{invoice.reference}}</td>
+        <td>${{invoice.amount|intcomma}}</td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+
+      {% if payments %}
+      {% for payment in payments %}
+      <tr>
+        <td colspan="2"></td>
+        <td>50%</td>
+        <td>{{payment.amount}}</td>
+        <td>@fat</td>
+      </tr>
+      {% endfor %}
+      {% else %}
+      <tr>
+        <td span="2"></td>
+        <td colspan="4" align="middle">Not paid yet</td>
+      {% endif %}
+      </tr>
     </tbody>
   </table>
-</div>
-{% endfor %}
+  {% endfor %}
 
-{% else %}
-<div class="alert alert-danger" role="alert" align=center>
-  <h3>Not Invoiced Yet, <a href="{% url 'tracker:create_invoice' engagement.client.pk engagement.pk %}">Add Invoice</a></h3>
+  {% else %}
+  <div class="alert alert-danger" role="alert" align=center>
+    <h3>Not Invoiced Yet <a href="{% url 'tracker:create_invoice' engagement.client.pk engagement.pk %}">Add Invoice</a></h3>
+  </div>
 </div>
+
 {% endif %}
-</div>
 
 {% endblock %}

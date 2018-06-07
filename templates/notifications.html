@@ -1,0 +1,16 @@
+{% include 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+  <form method='GET' action='{% url "tracker:notify" %}' class="form my-2 my-lg-0">
+  <div class='input-group'>
+    <input class="form-control" type="text" placeholder="Search" name='q' aria-label="Search" value='{{ request.GET.q }}'>
+    <span class='input-group-btn'>
+        <button class="btn btn-outline-success" type="submit">Search</button>
+    </span>
+    </div>
+</form>
+</div>
+
+{% endblock %}

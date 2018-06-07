@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+  <table class="table">
+    <thead class="thead-inverse">
+      <tr>
+        <th scope="col">Reference</th>
+        <th scope="col">Date</th>
+        <th scope="col">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+
+    {% for invoice in all_inv %}
+      <tr>
+        <td>{{invoice.invoices__client}}</td>
+        <td>{{invoice.date}}</td>
+        <td>{{invoice.amount}}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock%}

@@ -1,12 +1,12 @@
 from django.contrib.auth.models import Permission, User
 from django.db import models
+from django.db.models import F
 from django_countries.fields import CountryField
 from django.db.models.signals import pre_save, post_save
 from django.urls import reverse
 import datetime
 from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToFill
-from django.db.models.signals import pre_save, post_save
 from datetime import date
 
 
@@ -38,6 +38,7 @@ source = (
             ('Self approach','Self approach'),
             )
 eng_status = (
+            ('None','None'),
             ('Pending','Pending'),
             ('Planned','Planned'),
             ('Active','Active'),
@@ -50,9 +51,8 @@ title_of_contact_person = (
                             ('Mr','Mr'),
                                             )
 
-
 YEAR_CHOICES = []
-for r in range(2014, (datetime.datetime.now().year+1)):
+for r in range(2014, (datetime.datetime.now().year+3)):
     YEAR_CHOICES.append((r,r))
 type = (
 ('Existing','Existing'),
@@ -70,7 +70,7 @@ class Proposal(models.Model):
         return self.company_name+'-'+self.date
 
 class Client(models.Model):
-    name = models.CharField(max_length=50, blank=True, null=True)
+    name = models.CharField(max_length=100, blank=True, null=True)
     client_number = models.CharField(max_length=100, blank=True, null=True)
     tin = models.CharField('TIN', max_length=19, blank=True, null=True)
     comp_type = models.CharField('Company Type',blank = True, null = True, max_length = 100 )
@@ -98,9 +98,13 @@ class Client(models.Model):
     telephone_number = models.CharField(max_length = 20, blank = True, null=True)
     Email_address = models.CharField(max_length = 70, blank = True, null=True)
     is_favorite = models.BooleanField('Is Client',default=True)
+    datestamp = models.DateField(auto_now_add=True,blank = True, null=True)
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ('name',)
 
 class ContactPerson(models.Model):
     client = models.ForeignKey(Client,on_delete=models.CASCADE)
@@ -115,41 +119,40 @@ class ContactPerson(models.Model):
 
 class Engagement(models.Model):
     client              = models.ForeignKey(Client, on_delete=models.CASCADE,blank=True, null=True, related_name='engagements')
-    year                = models.IntegerField('Year', choices=YEAR_CHOICES, default=datetime.datetime.now().year)
-    reference           = models.CharField(max_length =122,blank=True, null=True)
-    date                = models.DateTimeField(auto_now_add=True,blank=True, null=True)
+    year                = models.IntegerField('Year', choices=YEAR_CHOICES, default=datetime.datetime.now().year) #Year should be August as year end
+    date_printed        = models.DateField(blank=True, null=True, auto_now_add=True)
+    reference           = models.CharField(max_length =122,blank=True, null=True, default='/BRJ/')
+    date                = models.DateField(blank=True, null=True, default=datetime.date.today)
     assignment          = models.CharField('Service', max_length = 19, choices = ass,blank=True, null=True)
     letter              = models.FileField('Engagement letter',blank=True, null=True)
     engagement_ending   = models.DateField('Ending date', blank=True, null = True)
     currency            = models.CharField(max_length = 19, choices = money, default = 'USD',blank=True, null=True)
-    rate                = models.PositiveIntegerField('Rate', blank=True, null=True)
-    factor              = models.PositiveIntegerField(default=1,blank=True, null=True)
+    rate                = models.PositiveIntegerField('Rate')
+    factor              = models.PositiveIntegerField(default=1)
     active              = models.PositiveIntegerField(blank=True, null=True)
     disbursements       = models.PositiveIntegerField(blank=True, null=True)
     payment             = models.PositiveIntegerField('Payment',blank=True, null=True )
     balance             = models.PositiveIntegerField(default=0, blank=True, null=True)
-    status              = models.CharField(choices=eng_status, max_length=122,default ='Active',blank=True, null=True)
-    remarks             = models.CharField(max_length=1000, blank=True, null=True)
+    status              = models.CharField(choices=eng_status, max_length=122,default ='None',blank=True, null=True)
+    remarks             = models.TextField(max_length=1000, blank=True, null=True)
     type                = models.CharField(choices=type, max_length=12, blank=True, null=True)
 
     class Meta:
-        ordering = ('-date',)
+        ordering = ('-date','-year')
 
     def get_absolute_url(self):
         """Returns the url to access a particular client instance."""
         return reverse('detail', args=[str(self.id)])
 
-def rl_pre_save_receiver(sender, instance, *args, **kwargs):
-    instance.active = instance.rate*instance.factor
-pre_save.connect(rl_pre_save_receiver, sender=Engagement)
+# def rl_pre_save_receiver(sender, instance, *args, **kwargs):
+#     instance.active = instance.rate*instance.factor
+# pre_save.connect(rl_pre_save_receiver, sender=Engagement)
 
 def rl_pre_save_receiver(sender, instance, *args, **kwargs):
-    today = datetime.date.today()
-    later = instance.date
-    timed = later- today
-    timer = timed.days
-    if timer >= 250:
-        instance.type = "Existing"
+    if instance.currency == 'UGX':
+        instance.active = (instance.rate/3600)*instance.factor
+    else:
+        instance.active = instance.rate*instance.factor
 pre_save.connect(rl_pre_save_receiver, sender=Engagement)
 
 class StuffOnJob(models.Model):
@@ -174,23 +177,18 @@ class Notes(models.Model):
 
 class Invoice(models.Model):
     engagement = models.ForeignKey(Engagement, on_delete=models.CASCADE, blank=True, null= True, related_name='invoices')
-    reference = models.CharField('Invoice Number',max_length=19, blank=True, null= True)
-    date = models.DateTimeField(blank=True, null= True)
+    reference = models.CharField('Invoice Number',max_length=225)
+    date = models.DateField(blank=True, null= True)
     amount = models.IntegerField(blank=True, null= True)
     scan = models.FileField('Scanned Invoice',blank=True, null= True)
     reminder = models.DateField('Set Payment Date remainder',blank=True, null= True)
-
-    def __str__(self):
-        return self.reference
+    payments = models.IntegerField(blank=True, null= True)
 
 class Payment(models.Model):
-    invoice  = models.ForeignKey(Invoice,on_delete=models.CASCADE, related_name='payments',blank=True, null=True)
-    amount      = models.IntegerField(blank=True, null=True)
-    doc         = models.FileField('Scanned Receipt')
+    engagement  = models.ForeignKey(Invoice,on_delete=models.CASCADE,blank=True, null=True)
+    amount      = models.PositiveIntegerField()
+    doc         = models.FileField('Scanned Receipt',blank=True, null=True)
     date        = models.DateField(blank=True, null= True)
-
-    def __str__(self):
-        return str(self.amount)
 
 class Disengagement(models.Model):
     engagement = models.ForeignKey(Engagement, on_delete= models.CASCADE)
@@ -205,18 +203,19 @@ class Disengagement(models.Model):
 
 class Target(models.Model):
     year        = models.IntegerField(choices=YEAR_CHOICES, unique=True)
-    audit       = models.PositiveIntegerField()
-    aos         = models.PositiveIntegerField('AoS')
-    taxcom      = models.PositiveIntegerField('TaxCom')
-    taxadv      = models.PositiveIntegerField('TaxAdv')
-    comsec      = models.PositiveIntegerField('ComSec')
-    consul      = models.PositiveIntegerField('Consul')
-    audit_new   = models.PositiveIntegerField('audit')
-    aos_new     = models.PositiveIntegerField('AoS')
-    taxcom_new  = models.PositiveIntegerField('TaxCom')
-    taxadv_new  = models.PositiveIntegerField('TaxAdv')
-    comsec_new  = models.PositiveIntegerField('ComSec')
-    consul_new  = models.PositiveIntegerField('Consul')
+    audit       = models.PositiveIntegerField(null=True, blank=True)
+    aos         = models.PositiveIntegerField('AoS',null=True, blank=True)
+    taxcom      = models.PositiveIntegerField('Tax Complaincy',null=True, blank=True)
+    taxadv      = models.PositiveIntegerField('Tax Advisory',null=True, blank=True)
+    comsec      = models.PositiveIntegerField('ComSec',null=True, blank=True)
+    consul      = models.PositiveIntegerField('Consultancy',null=True, blank=True)
+    account     = models.PositiveIntegerField('Accountancy',null=True, blank=True)
+    audit_new   = models.PositiveIntegerField('audit',null=True, blank=True)
+    aos_new     = models.PositiveIntegerField('AOS',null=True, blank=True)
+    taxcom_new  = models.PositiveIntegerField('Tax Complaincy',null=True, blank=True)
+    taxadv_new  = models.PositiveIntegerField('Tax Advisory',null=True, blank=True)
+    comsec_new  = models.PositiveIntegerField('Company Sec',null=True, blank=True)
+    consul_new  = models.PositiveIntegerField('Consultancy',null=True, blank=True)
 
     class Meta:
         ordering = ('-year',)

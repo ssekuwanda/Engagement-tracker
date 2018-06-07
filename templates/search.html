@@ -1,39 +1,91 @@
 {% extends 'base.html' %}
 
+{% load humanize %}
+
+{% load widget_tweaks %}
+{% load static %}
+
 {% block content %}
+<div class="container">
+  <form method="get">
+    <div class="well">
+      <h4 style="margin-top: 0">Engagement Search</h4>
+      <div class="row">
+        <div class="form-group col-sm-4 col-md-3">
+          {{ filter.form.year.label_tag }}
+          {% render_field filter.form.year class="form-control" %}
+        </div>
+        <div class="form-group col-sm-4 col-md-3">
+          {{ filter.form.assignment.label_tag }}
+          {% render_field filter.form.assignment class="form-control" %}
+        </div>
+        <div class="form-group col-sm-4 col-md-3">
+          {{ filter.form.currency.label_tag }}
+          {% render_field filter.form.currency class="form-control" %}
+        </div>
+        <div class="form-group col-sm-4 col-md-3">
+          {{ filter.form.type.label_tag }}
+          {% render_field filter.form.type class="form-control" %}
+        </div>
+        <div class="form-group col-sm-8 col-md-6">
+          {{ filter.form.client.label_tag }}
+          {% render_field filter.form.client class="form-control" %}
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <span class="glyphicon glyphicon-search"></span> Search
+      </button>
+      <button class="btn btn-success" id="btnExport" onclick="javascript:xport.toCSV('testTable');"> Export to CSV</button> <em>&nbsp;&nbsp;&nbsp;</em>
+      </button>
+    </div>
+  </form>
 
-<form method="get">
-  {{ filter.form.as_p }}
-  <button type="submit" class ='btn-btn btn-success'>Search</button>
-</form>
+<!-- <script src="{% static 'js/behaviour.js' %}"></script> -->
 
-<table class="table table-striped table-hover">
-  <thead>
-    <tr>
-      <th scope="col">Service</th>
-      <th scope="col">Client</th>
-      <th scope="col">Reference</th>
-      <th scope="col">Engagement Ending</th>
-      <th scope="col">Rate</th>
-      <th scope="col">Factor</th>
-      <th scope="col">Active</th>
-      <th scope="col">Currency</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for engagement in filter.qs %}
-    <tr>
-      <td>{{engagement.assignment}}</td>
-      <td>{{engagement.client}}</td>
-      <td>{{engagement.reference}}</td>
-      <td>{{engagement.engagement_ending}}</td>
-      <td>{{engagement.rate}}</td>
-      <td>{{engagement.factor}}</td>
-      <td>{{engagement.active}}</td>
-      <td>{{engagement.currency}}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+  <table class="table table-sm table-striped table-hover" id="testTable">
+    <thead>
+      <tr>
+        <th scope="col">Service</th>
+        <th scope="col">Client</th>
+        <th scope="col">Reference</th>
+        <th scope="col">Engagement Ending</th>
+        <th scope="col">Rate</th>
+        <th scope="col">Factor</th>
+        <th scope="col">Active</th>
+        <th scope="col">Currency</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for engagement in filter.qs %}
+        <tr>
+          <td>{{engagement.assignment}}</a></td>
+          <td>{{engagement.client|truncatechars:30}}</td>
+          <td>{{engagement.reference}}</td>
+          <td>{{engagement.engagement_ending}}</td>
+          <td align="right">{{engagement.rate}}</td>
+          <td align="right">{{engagement.factor}}</td>
+          <td align="right">{{engagement.active}}</td>
+          <td>{{engagement.currency}}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="8" align="middle" class="alert alert-danger" role="alert">NO DATA FOUND FOR THE SEARCH</td>
+        </tr>
+      {% endfor %}
+      <tfoot>
+        <tr>
+          <td align="right">TOTAL</td>
+          <td align="right"></td>
+          <td align="right"></td>
+          <td align="right"></td>
+          <td align="right"></td>
+          <td align="right"></td>
+          <td align="right"></td>
+          <td align="right"></td>
+        </tr>
+      </tfoot>
+    </tbody>
+  </table>
+</div>
 
 {% endblock %}

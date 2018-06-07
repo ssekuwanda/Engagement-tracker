@@ -1,15 +1,14 @@
 {% extends 'base.html' %}
 
+{% load humanize %}
 {% block content %}
 
-<div class="container">
+<div class="container-fluid">
   <div class="row">
     <div class="col-sm-3">
       <div class="panel panel-default">
-        <div class="container">
-        </div>
+        <h2 align=center>{{ client.name|upper }}</h2>
         <a href="{% url 'tracker:client_edit' client.pk %}">
-        <h2 align=center>{{ client.name|capfirst }}</h2>
           {% if client.company_logo %}
               <img src="{{ client.logo.url }}" style ="padding-bottom: 25px;">
           {%  else %}
@@ -21,11 +20,11 @@
         <table>
           <tr>
               <td width="100"><h5><b>TIN:</b>   {{ client.tin }}</h6></td>
-              <td><h5><b>Email:</b> {{ client.Email_address }} </h5></td>
+              <td><h5><b>EMAIL:</b> {{ client.Email_address }} </h5></td>
           </tr>
           <tr>
-              <td><h6><b>Services:</b> {{ client.services }}</h6></td>
-              <td><h6><b>Year End:</b> {{ client.year_end }}</h6></td>
+              <td><h6><b>SERVICES:</b> {{ client.services }}</h6></td>
+              <td><h6><b>YEAR END:</b> {{ client.year_end }}</h6></td>
           </tr>
       </table>
 
@@ -46,39 +45,51 @@
       <table class="table">
           <thead>
           <tr>
+            <font size="2">
               <th>Assignment</th>
               <th>Reference</th>
               <th>Date</th>
               <th>Amount</th>
+              <th>Invoice</th>
+              <th>Amount Paid</th>
               <th>Balance</th>
-              <th>Letter</th>
               <th></th>
-
+            </font>
           </tr>
           </thead>
           <tbody>
           {% for engagement in engagements %}
               <tr>
-                  <td>  <a href="{% url "tracker:edit_engagement" engagement.client.id client.id  %}">{{ engagement.assignment }}</a></td>
+                  <td>  <a href="{% url "tracker:edit_engagement" client.pk engagement.client.pk  %}">{{ engagement.assignment }}</a></td>
                   <td>{{ engagement.reference }}</td>
                   <td>{{ engagement.date }}</td>
-                  <td>{{ engagement.active }}</td>
+                  <td>{{ engagement.active|intcomma }}</td>
+                  <td></td>
+                  <td></td>
                   <td>{{ engagement.balance }}</td>
                   <td>
                     {% if engagement.letter %}
                       <a target="_blank" href="{{ engagement.letter.url }}">
-                          <button type="button" class="btn btn-danger btn-xs">
-                              <span class="glyphicon glyphicon-floppy-disk"></span>&nbsp; View
-                          </button>
+                        <span class="glyphicon glyphicon-paperclip" title='Attached Letter'></span>&nbsp;
                       </a>
                     {% endif %}
-                  </td>
-                  <td>
+                    <span>
                     <a href="{% url 'tracker:engagement_invoices' client.pk engagement.pk %}">
-                        <button type="submit" class="btn btn-success btn-xs">
-                            <span class="glyphicon glyphicon-pen"></span>&nbsp; Invoice $ Bill
-                        </button>
+                      <span class="glyphicon glyphicon-list-alt" title='Invoice'></span>&nbsp;
+                  </span>
+
+                    <a href="{% url 'tracker:create_payment' client.pk engagement.pk %}">
+                      <span class="glyphicon glyphicon-credit-card" title='Notes'></span>&nbsp;
                     </a>
+
+                    <a href="{% url 'tracker:create_payment' client.pk engagement.pk %}">
+                      <span class="glyphicon glyphicon-pencil" title='Edit'></span>&nbsp;
+                    </a>
+
+                    <a href="{% url 'tracker:create_payment' client.pk engagement.pk %}">
+                      <span class="glyphicon glyphicon-trash" title='Delete'></span>&nbsp;
+                    </a>
+
                   </td>
               </tr>
           {% endfor %}
@@ -87,4 +98,5 @@
     </div>
   </div>
 </div>
+
 {% endblock %}

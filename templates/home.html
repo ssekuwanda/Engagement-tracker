@@ -19,12 +19,12 @@
 <div class="container">
   <div class="row">
     {% for client in clients %}
-     <div class="col-sm-3 ">
+     <div class="col-xs-5 col-md-3">
            <a href="{% url 'tracker:detail' client.pk %}">
            {% if client.company_logo %}
            <img src="{{ client.logo.url }}">
            {% else %}
-           <img src="{% static 'image/mazarslogo.jpg' %}" alt="">
+           <img src="{% static 'image/mazarslogo.jpg' %}">
            {% endif %}
            <center><h5 class="card-title" style ="padding-bottom: 25px;" >{{ client.name|truncatechars:30|upper }}</h5></center>
            </a>

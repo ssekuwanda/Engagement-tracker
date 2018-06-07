@@ -3,7 +3,7 @@ from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.http import HttpResponseRedirect
 from django.db.models import Q, Sum, Count
-from .forms import NewClientForm, UserForm, EngagementForm, ProposalForm, PaymentForm, NotesForm, DisengagementForm, StuffOnJobForm, TargetForm, InvoiceForm
+from .forms import NewClientForm, UserForm, EngagementForm, ProposalForm, PaymentForm, NotesForm, DisengagementForm, StuffOnJobForm, TargetForm, InvoiceForm, SearchForm
 from .models import Client, ContactPerson, Engagement, Invoice, Payment, Target
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView,  CreateView, UpdateView, DetailView, ListView
@@ -11,7 +11,8 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import send_mail
-from .filters import EngagementFilter
+from .filters import EngagementFilter, ClientFilter
+import json
 
 IMAGE_FILE_TYPES = ['png', 'jpg', 'jpeg']
 
@@ -19,13 +20,27 @@ IMAGE_FILE_TYPES = ['png', 'jpg', 'jpeg']
 def home(request):
     clients = Client.objects.all()
     count = len(Client.objects.annotate(Count("name")))
-    return render(request, 'home.html', {'clients':clients, 'count':count })
+
+    # if request.method == "GET":
+    #     search_text = request.GET['search_text']
+    #     if search_text is not None and search_text != u"":
+    #         search_text = request.GET['search_text']
+    #         statuss = Client.objects.filter(status__contains = search_text)
+    #     else:
+    #         statuss = []
+
+    return render(request, 'home.html', {'clients':clients, 'count':count})
 
 @login_required
 def detail(request, pk):
     client = get_object_or_404(Client, pk=pk)
     engagements = client.engagements.all()
+
     return render(request, 'detail.html', {'client':client, 'engagements':engagements})
+
+def all_invoices(request):
+    all_inv = Invoice.objects.all()
+    return render(request, 'invoices.html', {'all_inv':all_inv})
 
 @login_required
 def new_client(request):
@@ -41,13 +56,6 @@ def new_client(request):
             #     ['paul.muwanguzi@mazars.ug', 'douglas.ssekuwanda@mazars.ug'],
             #     fail_silently=False,
             # )
-            send_mail(
-                'gmail nots..',
-                'New notication version control',
-                'cytixdoug@gmail.com',
-                ['paul.muwanguzi@mazars.ug', 'douglas.ssekuwanda@mazars.ug'],
-                fail_silently=False,
-            )
             return redirect('tracker:home')
         else:
             messages.warning(request, 'Please fill in all the fields correctly')
@@ -70,36 +78,16 @@ def create_engagement(request, pk):
     return render(request, 'engagement_create.html', {'form':form, 'client':client})
 
 @login_required
-def edit_engagement(request, client_id, engagement_id):
-    eng = get_object_or_404(Engagement, client__id=client_id, id=engagement_id)
+def edit_engagement(request, pk, engagement_pk):
+    eng = get_object_or_404(Engagement, client__pk=pk, pk=engagement_pk)
     if request.POST:
-        form = EngagementForm(request.POST,instance=eng)
+        form = EngagementForm(request.POST, instance=eng)
         if form.is_valid():
             engagement = form.save()
-            return redirect("tracker:detail", pk=engagement_id)
+            return redirect("tracker:detail", pk=engagement_pk)
     form = EngagementForm(instance=eng)
     return render(request, 'edit_engagement.html', {'form':form, 'eng':eng})
 
-@login_required
-def index(request):
-        client      = Client.objects.all()
-        year        = Year.objects.all()
-        engagement_results = Engagement.objects.all()
-        query       = request.GET.get("q")
-        if query:
-            client = client.filter(
-                Q(name=query) |
-                Q(client_number=query)
-            ).distinct()
-            engagement_results = engagement_results.filter(
-                Q(client_name__icontains=query)
-            ).distinct()
-            return render(request, 'tracker/index.html', {
-                'client': client,
-                'engagement_results': engagement_results,
-            })
-        else:
-            return render(request, 'index.html', {'client': client})
 
 class ClientEdit(UpdateView):
     model = Client
@@ -149,33 +137,18 @@ def create_invoice(request, pk, engagement_pk):
         form = InvoiceForm()
     return render(request, 'invoice_create.html',{'form':form,'engagement':engagement})
 
-def create_payment(request, pk, invoice_pk):
-    invoice = get_object_or_404(Invoice, engagement__pk=pk, pk=invoice_pk)
-    if request.method =='POST':
+def create_payment(request, pk, engagement_pk):
+    engagement = get_object_or_404(Engagement, client__pk=pk, pk=engagement_pk)
+    if request.method == 'POST':
         form = PaymentForm(request.POST)
         if form.is_valid():
             payment = form.save(commit=False)
-            payment.invoice = invoice
+            payment.engagement = engagement
             payment.save()
-
-            invoice_url = reverse('tracker:engagement_invoices', kwargs={'pk':pk, 'invoice_pk':invoice_pk})
-            invoice_payment_url = '{url}/{id}'.format(
-                url=invoice_url,
-                id=payment.pk,
-                )
-            return redirect(invoice_url)
-        else:
-            form = PaymentForm()
-        return render(request, 'payment.html', {'form':form, 'invoice':invoice})
-
-class EngagementDetails(DetailView):
-    template_name = 'engagement_details.html'
-    def get_queryset(self):
-        disengagement   = Disengagement.objects.all()
-        stuff           = StuffOnJob.objects.all()
-        contact         = ContactPerson.objects.all()
-        notes           = Notes.objects.all()
-        return queryset()
+            return redirect('tracker:engagement_invoices', pk=pk, engagement_pk=engagement_pk)
+    else:
+        form = PaymentForm()
+    return render(request, 'payment.html',{'form':form,'engagement':engagement})
 
 def notes(request):
     if request.method=='POST':
@@ -214,52 +187,118 @@ def DisengagementForm(request):
 def dashboard(request):
     targets = Target.objects.all()
 
-    exiting_audit = Target.objects.all().aggregate(Sum('audit'))['audit__sum']
-    exiting_aos = Target.objects.all().aggregate(Sum('aos'))['aos__sum']
-    exiting_taxcom = Target.objects.all().aggregate(Sum('taxcom'))['taxcom__sum']
-    exiting_taxadv = Target.objects.all().aggregate(Sum('taxadv'))['taxadv__sum']
-    exiting_comsec = Target.objects.all().aggregate(Sum('comsec'))['comsec__sum']
-    exiting_consul = Target.objects.all().aggregate(Sum('consul'))['consul__sum']
-    exiting = exiting_audit+exiting_aos+exiting_taxcom+exiting_taxadv+exiting_comsec+exiting_consul
+    dataset = Engagement.objects\
+                .values('assignment','year')\
+                .annotate(existing_count=Count('assignment', filter=Q(type='Existing')),
+                        new_count=Count('assignment', filter=Q(type='New')),
+                        active_count=Sum('active'),
+                        )\
+                .order_by('assignment')
 
-    audit_new = Target.objects.all().aggregate(Sum('audit_new'))['audit_new__sum']
-    aos_new = Target.objects.all().aggregate(Sum('aos_new'))['aos_new__sum']
-    taxcom_new = Target.objects.all().aggregate(Sum('taxcom_new'))['taxcom_new__sum']
-    taxadv_new = Target.objects.all().aggregate(Sum('taxadv_new'))['taxadv_new__sum']
-    comsec_new = Target.objects.all().aggregate(Sum('comsec_new'))['comsec_new__sum']
-    consul_new = Target.objects.all().aggregate(Sum('consul_new'))['consul_new__sum']
-    new = audit_new+aos_new+taxcom_new+taxadv_new+comsec_new+consul_new
+    categories = list()
+    new_series_data = list()
+    existing_series_data = list()
+    active_series_data = list()
 
-    summation_all_assign = Engagement.objects.filter(type__contains='Existing').aggregate(Sum('rate'))['rate__sum']
+    for entry in dataset:
+        categories.append(entry['assignment'])
+        new_series_data.append(entry['new_count'])
+        existing_series_data.append(entry['existing_count'])
+        active_series_data.append(entry['active_count'])
+
+    new_series = {'name':'New',
+                    'data':new_series_data,
+                    'color':'green'
+    }
+    existing_series = {'name':'Existing',
+                    'data':existing_series_data,
+                    'color':'red'
+    }
+
+    chart = {
+            'chart':{'type':'column'},
+            'title':{'text': 'ENGAGEMENTS BY SERVICE'},
+            'xAxis':{'categories':categories},
+            'series':[new_series,existing_series]
+    }
+
+    dump =json.dumps(chart)
+
+    def invoice(x):
+        out = Invoice.objects.filter(engagement__assignment__contains=x).aggregate(Sum('amount'))['amount__sum']
+        return int(0 if out is None else out)
+
+    def total(a,b,c,d,e,f):
+        return(a+b+c+d+e+f)
+
+    invoices_taxcom =  invoice('Tax compliance')
+    invoices_audit = invoice('Audit & assurance')
+    invoices_aos = invoice('AOS')
+    invoices_taxadv = invoice('Tax advisory')
+    invoices_comsec = invoice('Company secretarial')
+    invoices_consul = invoice('Consultancy')
+    # invoices_account = invoice('account')
+    invoice_total = total(invoices_taxcom,invoices_audit,invoices_aos,invoices_taxadv,invoices_comsec,invoices_consul)
+
+    def engagement(y):
+        current = Engagement.objects.filter(assignment__contains=y).filter(type__contains='Existing').aggregate(Sum('active'))['active__sum']
+        return int(0 if current is None else current)
 
 
-    sum_tax = Engagement.objects.filter(assignment__contains='Tax compliance').filter(type__contains='Existing').aggregate(Sum('rate'))['rate__sum']
-    sum_comsec = Engagement.objects.filter(assignment__contains='Company secretarial').filter(type__contains='Existing').aggregate(Sum('rate'))['rate__sum']
-    sum_audit = Engagement.objects.filter(assignment__contains='Audit & assurance').filter(type__contains='Existing').aggregate(Sum('rate'))['rate__sum']
-    sum_taxadv = Engagement.objects.filter(assignment__contains='Tax advisory').filter(type__contains='Existing').aggregate(Sum('rate'))['rate__sum']
-    sum_account = Engagement.objects.filter(assignment__contains='Accountancy').filter(type__contains='Existing').aggregate(Sum('rate'))['rate__sum']
-    sum_cons = Engagement.objects.filter(assignment__contains='Consultancy').filter(type__contains='Existing').aggregate(Sum('rate'))['rate__sum']
-    sum_aos = Engagement.objects.filter(assignment__contains='AOS').filter(type__contains='Existing').aggregate(Sum('rate'))['rate__sum']
+    sum_tax = engagement('Tax compliance')
+    sum_comsec = engagement('Company secretarial')
+    sum_audit = engagement('Audit & assurance')
+    sum_taxadv = engagement('Tax advisory')
+    sum_account = engagement('Accountancy')
+    sum_cons = engagement('Consultancy')
+    sum_aos = engagement('AOS')
+    summation_all_assign1 = total(sum_tax,sum_comsec,sum_audit,sum_taxadv,sum_account,sum_cons)
+    summation_all_assign = sum_aos+summation_all_assign1
 
-    summation_all_assign_new = Engagement.objects.filter(type__contains='New').aggregate(Sum('rate'))['rate__sum']
+    def engagement_new(y):
+        new = Engagement.objects.filter(assignment__contains=y).filter(type__contains='New').aggregate(Sum('active'))['active__sum']
+        return int(0 if new is None else new)
 
-    sum_tax_new = Engagement.objects.filter(assignment__contains='Tax compliance').filter(type__contains='New').aggregate(Sum('rate'))['rate__sum']
-    sum_comsec_new = Engagement.objects.filter(assignment__contains='Company secretarial').filter(type__contains='New').aggregate(Sum('rate'))['rate__sum']
-    sum_audit_new = Engagement.objects.filter(assignment__contains='Audit & assurance').filter(type__contains='New').aggregate(Sum('rate'))['rate__sum']
-    sum_taxadv_new = Engagement.objects.filter(assignment__contains='Tax advisory').filter(type__contains='New').aggregate(Sum('rate'))['rate__sum']
-    sum_account_new = Engagement.objects.filter(assignment__contains='Accountancy').filter(type__contains='New').aggregate(Sum('rate'))['rate__sum']
-    sum_cons_new = Engagement.objects.filter(assignment__contains='Consultancy').filter(type__contains='New').aggregate(Sum('rate'))['rate__sum']
-    sum_aos_new = Engagement.objects.filter(assignment__contains='AOS').filter(type__contains='New').aggregate(Sum('rate'))['rate__sum']
+    sum_tax_new = engagement_new('Tax compliance')
+    sum_comsec_new = engagement_new('Company secretarial')
+    sum_audit_new = engagement_new('Audit & assurance')
+    sum_taxadv_new = engagement_new('Tax advisory')
+    sum_account_new = engagement_new('Accountancy')
+    sum_cons_new = engagement_new('Consultancy')
+    sum_aos_new = engagement_new('AOS')
+    summation_all_assign_new1 = total(sum_tax_new,sum_comsec_new,sum_audit_new,sum_taxadv_new,sum_account_new,sum_cons_new)
+    summation_all_assign_new = sum_aos_new+summation_all_assign_new1
 
-    # var_tax = sum_tax-sum_tax_new
-    # var_comsec = sum_comsec-sum_comsec_new
-    # var_audit = sum_audit-sum_audit_new
-    # var_taxadv = sum_taxadv-sum_taxadv_new
-    # var_account = sum_account-sum_account_new
-    # var_cons = sum_cons-sum_cons_new
-    # var_aos = sum_aos-sum_aos_new
+    total_tax = sum_tax+sum_tax_new
+    total_comsec = sum_comsec+sum_comsec_new
+    total_audit = sum_audit+sum_audit_new
+    total_taxadv = sum_taxadv+sum_taxadv_new
+    total_account = sum_account+sum_account_new
+    total_cons = sum_cons+sum_cons_new
+    total_aos = sum_aos+sum_aos_new
+    total = total_tax+total_comsec+total_audit+total_taxadv+total_account+total_cons+total_aos
 
-    context = {'targets':targets,'exiting':exiting,'new':new,'sum_tax':sum_tax,
+    var1_tax = int(0 if sum_tax_new is None else sum_tax_new)
+    var1_comsec = int(0 if sum_tax is None else sum_tax)+int(0 if sum_tax_new is None else sum_tax_new)
+    var1_audit = int(0 if sum_tax is None else sum_tax)+int(0 if sum_tax_new is None else sum_tax_new)
+    var1_taxadv = int(0 if sum_tax is None else sum_tax)+int(0 if sum_tax_new is None else sum_tax_new)
+    var1_account = int(0 if sum_tax is None else sum_tax)+int(0 if sum_tax_new is None else sum_tax_new)
+    var1_cons = int(0 if sum_tax is None else sum_tax)+int(0 if sum_tax_new is None else sum_tax_new)
+    var1_aos = int(0 if sum_tax is None else sum_tax)+int(0 if sum_tax_new is None else sum_tax_new)
+    total_var1 = var1_tax+var1_comsec+var1_audit+var1_taxadv+var1_account+var1_cons+var1_aos
+
+    var2_tax = int(0 if total_tax is None else total_tax)
+    var2_comsec = int(0 if total_comsec is None else total_comsec)
+    var2_audit = int(0 if total_audit is None else total_audit)
+    var2_taxadv = int(0 if total_taxadv is None else total_taxadv)
+    var2_account = int(0 if total_account is None else total_account)
+    var2_cons = int(0 if total_cons is None else total_cons)
+    var2_aos = int(0 if total_aos is None else total_aos)
+    total_var2 = var2_tax+var2_comsec+var2_audit+var2_taxadv+var2_account+var2_cons+var2_aos
+
+    context = {'targets':targets,
+
+                'sum_tax':sum_tax,
                 'sum_audit':sum_audit,
                 'sum_taxadv':sum_taxadv,
                 'sum_comsec':sum_comsec,
@@ -268,22 +307,46 @@ def dashboard(request):
                 'sum_aos':sum_aos,
                 'summation_all_assign':summation_all_assign,
 
-                'sum_tax_new':sum_tax_new,
-                'sum_comsec_new':sum_comsec_new,
                 'sum_audit_new':sum_audit_new,
-                'sum_taxadv_new':sum_taxadv_new,
-                'sum_account_new':sum_account_new,
-                'sum_cons_new':sum_cons_new,
                 'sum_aos_new':sum_aos_new,
+                'sum_comsec_new':sum_comsec_new,
+                'sum_account_new':sum_account_new,
+                'sum_taxadv_new':sum_taxadv_new,
+                'sum_cons_new':sum_cons_new,
+                'sum_tax_new':sum_tax_new,
                 'summation_all_assign_new':summation_all_assign_new,
 
-                # 'var_tax':var_tax,
-                # 'var_comsec':var_comsec,
-                # 'var_audit':var_audit,
-                # 'var_taxadv':var_taxadv,
-                # 'var_account':var_account,
-                # 'var_cons':var_cons,
-                # 'var_aos':var_aos,
+                'total_tax':total_tax,
+                'total_comsec':total_comsec,
+                'total_audit':total_audit,
+                'total_taxadv':total_taxadv,
+                'total_account':total_account,
+                'total_cons':total_cons,
+                'total_aos':total_aos,
+
+                'var2_tax':var2_tax,
+                'var2_comsec':var2_comsec,
+                'var2_audit':var2_audit,
+                'var2_taxadv':var2_taxadv,
+                'var2_account':var2_account,
+                'var2_cons':var2_cons,
+                'var2_aos':var2_aos,
+
+                'total_var2':total_var2,
+                'total':total,
+
+                'total_var1':total_var1,
+
+                'invoices_taxcom':invoices_taxcom,
+                'invoices_audit':invoices_audit,
+                'invoices_aos':invoices_aos,
+                'invoices_taxadv':invoices_taxadv,
+                'invoices_comsec':invoices_comsec,
+                'invoices_consul':invoices_consul,
+
+                'invoice_total':invoice_total,
+                'dataset':dataset,
+                'chart':chart,
 
                 }
     template_name = 'dashboard.html'
@@ -307,8 +370,9 @@ def search(request):
 
 def engagement_invoices(request, pk, engagement_pk):
     engagement =get_object_or_404(Engagement, pk=pk, engagement__pk=engagement_pk)
-    invoice = invoice.engagement.all()
-    return render(request, 'detail.html', {'client':client, 'invoice':invoice})
+    invoice = engagement.invoices.all()
+    payment = payment.engagement.all()
+    return render(request, 'detail.html', {'invoice':invoice, 'payment':payment})
 
 class EngagementInvoice(ListView):
     model = Invoice
@@ -323,3 +387,35 @@ class EngagementInvoice(ListView):
         self.engagement = get_object_or_404(Engagement, client__pk=self.kwargs.get('pk'), pk=self.kwargs.get('engagement_pk'))
         queryset = self.engagement.invoices.order_by('-date')
         return queryset
+
+class EngagementPayment(ListView):
+    model = Payment
+    context_object_name = 'payments'
+    template_name = 'engagement_details.html'
+
+    def get_context_data(self, **kwargs):
+        kwargs['engagement']=self.engagement
+        return super().get_context_data(**kwargs)
+
+    def get_queryset(self):
+        self.engagement = get_object_or_404(Engagement, client__pk=self.kwargs.get('pk'), pk=self.kwargs.get('engagement_pk'))
+        queryset = self.engagement.payments.order_by('-date')
+        return queryset
+
+def notifications(request):
+    pass
+
+def dasher(request):
+    # new = Engagement.objects.values().filter(type__contains='Existing')
+    new = Engagement.objects.filter(type__contains='New')
+    existing = Engagement.objects.filter(type__contains='Existing')
+
+    invoiced = Invoice.objects.all()
+    payment = Payment.objects.all()
+
+    from django.core import serializers
+    data = serializers.serialize("json", Engagement.objects.all())
+
+    dump = json.dumps(data)
+
+    return render(request, 'dasher.html', {'new':new,'existing':existing, 'invoiced':invoiced,'payment':payment,'dump':dump})

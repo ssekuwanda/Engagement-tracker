@@ -1,0 +1,171 @@
+Python django (python 3.6) deployment from GitHub to aws ec2
+\
+
+mazarslaunch.pem key to use
+
+ssh (using putty)
+
+yes
+
+sudo apt-get update
+
+**Python alternative installation here** however use **ppa:deadsnakes/ppa** instead of ppa:jonathonf/python-3.6
+
+sudo add-apt-repository ppa:deadsnakes/ppa
+
+sudo apt-get update
+
+sudo apt-get install python3.6
+
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.5 1
+
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2
+
+sudo update-alternatives --config python3
+
+python3 -V   #Checking the version of python to see that itss correctly installed
+
+sudo rm /usr/bin/python3
+
+sudo ln -s python3.5 /usr/bin/python3 
+
+# Install Pip3 nginx and git
+
+sudo apt-get install python3-pip python3-dev nginx git
+
+Y
+
+sudo apt-get update
+
+export LC_ALL=C
+
+sudo pip3 install virtualenv
+git clone https://github.com/muwanguzipoloe/Mazars-Launch-3.git
+cd Mazars-Launch-3
+virtualenv venv
+source venv/bin/activate
+pip3 install -r requirements.txt
+pip3 install django bcrypt django-extensions
+pip3 install gunicorn
+cd quick 
+sudo vim settings.py
+
+
+# Inside settings.py modify these lines allowed host public IP address I for INSERT
+
+i
+
+
+ALLOWED_HOSTS = [’18.217.169.55’,’launch.brj.co.ug’]
+
+# add the line below to the bottom of the file
+
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+
+Save your changes and quit. ESC :wq
+
+cd .. 
+python3 manage.py collectstatic
+gunicorn --bind 0.0.0.0:8000 quick.wsgi:application (run it under Mazars-Launch-3
+
+ctrl+c
+
+sudo vim /etc/systemd/system/gunicorn.service
+
+i
+
+[Unit]
+Description=gunicorn daemon
+After=network.target
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/Mazars-Launch-3
+ExecStart=/home/ubuntu/Mazars-Launch-3/venv/bin/gunicorn --workers 3 --bind unix:/home/ubuntu/Mazars-Launch-3/quick.sock eng.wsgi:application
+[Install]
+WantedBy=multi-user.target
+
+ESC :wq   ESC :q!
+
+sudo systemctl daemon-reload
+sudo systemctl start gunicorn
+sudo systemctl enable gunicorn
+sudo vim /etc/nginx/sites-available/quick
+
+i
+
+server {
+  listen 80;
+  server_name 18.191.10.172;
+  location = /favicon.ico { access_log off; log_not_found off; }
+  location /static/ {
+      root /home/ubuntu/Mazars-Launch-3;
+  }
+  location / {
+      include proxy_params;
+      proxy_pass http://unix:/home/ubuntu/Mazars-Launch-3/quick;
+  }
+}
+
+ESC :wq
+
+sudo nginx -t
+sudo rm /etc/nginx/sites-enabled/default
+sudo service nginx restart
+
+
+gunicorn --bind 0.0.0.0:8000 quick.wsgi:application (run it under Mazars-Launch-3/quick)
+
+
+http://18.217.169.55:8000/admin 
+
+
+
+
+
+TO UPDATE after changes have been made on the git repo:
+
+perform the following commands
+
+The first time you should run ** git config — global —edit *** (enter git user name and email address)
+
+
+git status
+git pull origin master 
+git commit -a -m “these quotes should hold the message you want to be logged”
+
+you may run : git pull origin master (again just to confirm update)
+
+gunicorn —bind 0.0.0.0:8000 eng.wsgi:application 
+
+
+
+
+
+
+Updating :
+
+ON Local machine:
+After making changes on local machine 
+
+1- git add .
+2- git commit -m “enter the message to explain the change”
+3- git pull (git repo)
+4- git push origin master 
+
+On git repo :
+
+Refresh to confirm changes.
+
+On site server :
+
+1- git status (to  confirm change )
+2- git fetch ( the server requests for a commit message that you enter at this point through nano text editor )
+3- git add .
+4- git commit -a -m 
+5- Restart services :
+    sudo systemctl daemon-reload
+    sudo systemctl start gunicorn
+    sudo systemctl enable gunicorn
+
+6- gunicorn —bind 0.0.0.0:8000 eng.wsgi:application (under repo folder) 

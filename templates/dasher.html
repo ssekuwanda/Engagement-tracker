@@ -1,0 +1,179 @@
+{% include 'base.html' %}
+
+{% block content %}
+
+{% load mathfilters %}
+{% load humanize %}
+
+
+{% load staticfiles %}
+
+<script src="{% static 'js/behaviour.js' %}"></script>
+
+<div class="container">
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link primary" href="#">All</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Audit</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Tax</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">TaxCom</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link disabled" href="#">AOS</a>
+      </li>
+    </ul>
+</div>
+
+    <br>
+
+<div class="container">
+  <div class="col-sm-6">
+    <h1>New All</h1>
+    {% for client in new %}
+
+    <ul>
+    <li>{{ client.client.currency }}-{{ client.active }}</li>
+    </ul>
+
+  {% endfor %}
+  </div>
+  <div class="col-sm-6">
+    <h1>Existing All
+      <small>(In progress work)</small>
+
+    </h1>
+    {% for clientie in existing %}
+
+    <ul>
+    <li>{{ clientie.client }}-{{ clientie.active }}</li>
+    </ul>
+  {% endfor %}
+  </div>
+</div>
+
+<div class="container">
+  <div class="col-sm-6">
+    <h1>Invoices/ Billed</h1>
+    {% for clientie in invoiced %}
+    {% for pay in payment %}
+
+    <ul>
+    <li>{{ clientie.engagement.client }}-{{ clientie.amount}}</li>
+    <li>{{ pay.amount}}</li>
+    <li>{{clientie.amount|sub:pay.amount}}</li>
+
+    <li>
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">Engaged(25%)</div>
+      </div>
+    </li>
+
+    </ul>
+  {% endfor %}
+  {% endfor %}
+  </div>
+
+  <div class="col-sm-6">
+      <h1>Lost Clients</h1>
+  </div>
+</div>
+
+
+<div class="container">
+  <div class="card">
+    <div class="card-body">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th scope="col">Client</th>
+            <th scope="col">Assignment</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Work Progress</th>
+            <th scope="col">Invoiced</th>
+            <th scope="col">Paid</th>
+            <th scope="col">Balance</th>
+          </tr>
+        </thead>
+
+        {% for client_new in new%}
+        {% for invoice in invoiced %}
+        {% for pay in payment %}
+        <tbody>
+          <tr>
+            <th scope="row">{{client_new.client.name|intcomma|truncatechars:12|upper}}</th>
+            <th scope="row">{{client_new.assignment|intcomma|truncatechars:10}}</th>
+            <th scope="row">{{client_new.active|intcomma }}</th>
+            <th scope="row">
+              <div class="progress">
+                <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 100%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">Engaged(100%)</div>
+              </div>
+            </th>
+            <th scope="row">{{invoice.amount|intcomma }}</th>
+            <th scope="row">{{pay.amount|intcomma }}</th>
+            <th scope="row">{{client_new.active|sub:pay.amount|intcomma }}</th>
+          </tr>
+        </tbody>
+        {% endfor %}
+        {% endfor %}
+        {% endfor %}
+      </table>
+    </div>
+
+    </div>
+  </div>
+
+
+
+
+  <table>
+  <tr>
+    <td>
+      <input value="1" />
+    </td>
+    <td>
+      <input value="2" />
+    </td>
+    <td>
+      <input value="3" />
+    </td>
+    <td class="rowsum">-</td>
+  </tr>
+  <tr>
+    <td>
+      <input value="4" />
+    </td>
+    <td>
+      <input value="5" />
+    </td>
+    <td>
+      <input value="6" />
+    </td>
+    <td class="rowsum">-</td>
+  </tr>
+  <tr>
+    <td>
+      <input value="7" />
+    </td>
+    <td>
+      <input value="8" />
+    </td>
+    <td>
+      <input value="9" />
+    </td>
+    <td class="rowsum">-</td>
+  </tr>
+  <tr>
+    <td class="colsum">-</td>
+    <td class="colsum">-</td>
+    <td class="colsum">-</td>
+  </tr>
+</table>
+
+
+{% endblock %}

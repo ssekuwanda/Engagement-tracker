@@ -8,6 +8,7 @@ from django.contrib.admin.widgets import AdminDateWidget
 from django.forms.fields import DateField
 from .models import Client, Engagement, User, Proposal, Payment, Notes, Disengagement, StuffOnJob, Target, Invoice
 import calendar, datetime
+from django.utils.dates import MONTHS
 
 job =(
       ('Annually','Annually'),
@@ -62,9 +63,11 @@ class NewClientForm(ModelForm):
                                 )
 
 class EngagementForm(ModelForm):
-    date = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
-    engagement_ending = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
-    date = forms.DateField(widget=forms.SelectDateWidget, initial=datetime.date.today())
+    date = forms.DateField(widget=forms.SelectDateWidget(years=range(2015, 2021))) #, initial=datetime.date.today()
+    date_printed = forms.DateField(widget=forms.SelectDateWidget(years=range(2015, 2021)))
+    engagement_ending = forms.DateField(widget=forms.SelectDateWidget(years=range(2015, 2021)))
+    CHOICES = eng_status = (('None','None'),('Pending','Pending'),('Planned','Planned'),('Active','Active'),('Concluded','Concluded'),)
+    status = forms.ChoiceField(choices=CHOICES,widget=forms.RadioSelect, initial ='None')
     class Meta:
         model = Engagement
         exclude = ['balance', 'payment', 'client','date','active']
@@ -148,3 +151,8 @@ class InvoiceForm(ModelForm):
         self.helper.form_id ='invoice-create-form'
         self.helper.form_method = 'post'
         self.helper.add_input(Submit('submit', 'Submit'))
+
+class SearchForm(ModelForm):
+    class Meta:
+        model = Client
+        fields = ('name',)

@@ -1,0 +1,30 @@
+https://medium.com/quick-code/top-tutorials-to-learn-react-native-90867a836c3e
+https://gist.github.com/jevakallio/2112301e111f26896ffa21326a04ba00
+https://devdactic.com/react-native-for-beginners/
+http://www.reactnativeexpress.com/environment
+https://www.raywenderlich.com/165140/react-native-tutorial-building-ios-android-apps-javascript
+https://www.codementor.io/oluwagbengajoloko/getting-started-with-react-native-fmrqqx0g9
+https://www.codementor.io/community/topic/react-native
+
+
+django tutorial
+https://hellowebbooks.com/tutorial/user-objects/
+
+https://www.dreamsolution.nl/2014-09-21-django-crispy-forms.html
+
+
+deployment
+https://medium.com/@thetrevorharmon/installing-django-onto-windows-server-2012-b64ce6563cb
+https://www.metaltoad.com/blog/hosting-django-sites-apache
+https://www.digitalocean.com/community/tutorials/how-to-install-the-apache-web-server-on-ubuntu-16-04
+
+relationships
+http://protocolostomy.com/2009/08/31/representing-relationships-in-django-templates-without-writing-extra-code-relatedmanager-and-manyrelatedmanager/
+
+
+http://b-ok.xyz/
+https://docslide.us/documents/complete-plain-words-sir-ernest-gowerspdf.html
+
+
+Launch ting
+http://mazars.brj.co.ug:8000/admin/company/invitees/

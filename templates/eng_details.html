@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load mathfilters %}
+
+{% block content %}
+{% load humanize %}
+
+{% if invoices %}
+{% for invoice in invoices %}
+
+<div class="container">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col">Assignment</th>
+        <th scope="col">Reference</th>
+        <th scope="col" colspan="2" align='right'>Payment <button type="button" class="btn btn-primary"> PAY</button></th>
+        <th scope="col">Balance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td></td>
+        <td>{{invoice.reference}}<br> <small>{{invoice.amount|intcomma}}</small>
+        </td>
+        <td>Percent</td>
+        <td>Amount</td>
+        <td></td>
+      </tr>
+
+      {% if payments %}
+      {% for payment in payments %}
+      <tr>
+        <td colspan="2"></td>
+        <td>50%</td>
+        <td>{{payment.amount}}</td>
+        <td>@fat</td>
+      </tr>
+      {% endfor %}
+      {% else %}
+      <tr>
+        <td span="2"></td>
+        <td colspan="4" align="middle">Not paid yet</td>
+      {% endif %}
+      </tr>
+    </tbody>
+  </table>
+  {% endfor %}
+
+  {% else %}
+  <div class="alert alert-danger" role="alert" align=center>
+    <h3>Not Invoiced Yet <a href="{% url 'tracker:create_invoice' engagement.client.pk engagement.pk %}">Add Invoice</a></h3>
+  </div>
+</div>
+
+{% endif %}
+
+{% endblock %}
